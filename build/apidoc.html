@@ -1,0 +1,293 @@
+<div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a
+
+        href="https://github.com/robatron/gulp-chug#readme"
+
+    >gulp-chug (v0.5.1)</a>
+</h1>
+<h4>Run external gulpfiles as part of a gulp task inside another gulpfile</h4>
+<div class="apidocSectionDiv"><a
+    href="#apidoc.tableOfContents"
+    id="apidoc.tableOfContents"
+><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.gulp-chug">module gulp-chug</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.gulp-chug.gulp-chug">
+            function <span class="apidocSignatureSpan"></span>gulp-chug
+            <span class="apidocSignatureSpan">( options, userCallback )</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.gulp-chug.toString">
+            function <span class="apidocSignatureSpan">gulp-chug.</span>toString
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.gulp-chug.toString">module gulp-chug.toString</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.gulp-chug.toString.toString">
+            function <span class="apidocSignatureSpan">gulp-chug.</span>toString
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.gulp-chug" id="apidoc.module.gulp-chug">module gulp-chug</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.gulp-chug.gulp-chug" id="apidoc.element.gulp-chug.gulp-chug">
+        function <span class="apidocSignatureSpan"></span>gulp-chug
+        <span class="apidocSignatureSpan">( options, userCallback )</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">gulp-chug = function ( options, userCallback ) {
+
+    // Consider `options` the callback if it&#x27;s a function
+    if ( _.isFunction( options ) ) {
+        userCallback = options;
+        options = {};
+    }
+
+    // Set default options
+    var opts = _.assign( {
+        nodeCmd: &#x27;node&#x27;,
+        tasks: [ &#x27;default&#x27; ]
+    }, options );
+
+    // Set the callback to a noop if it&#x27;s not a function
+    userCallback = _.isFunction( userCallback ) ? userCallback : _.noop
+
+    // Create a stream through which each file will pass
+    return through.obj( function ( file, enc, callback ) {
+
+        // Grab reference to this through object
+        var self = this;
+
+        // Since we&#x27;re not modifying the gulpfile, always push it back on the
+        // stream.
+        self.push( file );
+
+        // Configure logging and errors
+        var say = function( msg, noNewLine ) {
+            if ( !noNewLine ) {
+                return console.log(
+                    util.format( &#x27;[%s]&#x27;, gutil.colors.green( PKG.name ) ), msg
+                );
+            }
+            process.stdout.write( util.format( &#x27;[%s]&#x27;, gutil.colors.green( PKG.name ) ) + &#x27; &#x27; + msg )
+        };
+
+        var sayErr = function( errMsg ) {
+            self.emit( &#x27;error&#x27;, new PluginError( PKG.name, errMsg ) );
+        };
+
+        // Error if file contents is stream ( { buffer: false } in gulp.src )
+        // TODO: Add support for a streams
+        if ( file.isStream() ) {
+            sayErr( &#x27;Streams are not supported yet. Pull requests welcome :)&#x27; );
+            return callback();
+        }
+
+        // Gather target gulpfile info
+        var gulpfile = {};
+        gulpfile.path       = file.path;
+        gulpfile.relPath    = path.relative( process.cwd(), gulpfile.path );
+        gulpfile.base       = path.dirname( file.path );
+        gulpfile.relBase    = path.relative( process.cwd(), gulpfile.base );
+        gulpfile.name       = path.basename( gulpfile.path );
+        gulpfile.ext        = path.extname( gulpfile.name );
+
+        // If file contents is null, { read: false }, just execute file as-is
+        // on disk
+        if( file.isNull() ){
+            say( util.format(
+                &#x27;Gulpfile, %s, contents is empty. Reading directly from disk...&#x27;,
+                gulpfile.name
+            ) );
+        }
+
+        // If file contents is a buffer, write a temp file and run that instead
+        if( file.isBuffer() ) {
+
+            say( &#x27;File is a buffer. Need to write buffer to temp file...&#x27; );
+
+            var tmpGulpfileName = util.format(
+                &#x27;%s.tmp.%s%s&#x27;,
+                path.basename( gulpfile.name, gulpfile.ext ),
+                new Date().getTime(),
+                gulpfile.ext
+            );
+
+            // Tweak gulpfile info to account for temp file
+            gulpfile.origPath       = gulpfile.path;
+            gulpfile.path           = path.join( gulpfile.base, tmpGulpfileName );
+            gulpfile.tmpPath        = gulpfile.path;
+            gulpfile.origRelPath    = gulpfile.relPath;
+            gulpfile.relPath        = path.relative( process.cwd(), gulpfile.path );
+            gulpfile.name           = tmpGulpfileName;
+
+            say( util.format(
+                &#x27;Writing buffer to %s...&#x27;,
+                gutil.colors.magenta( gulpfile.relPath )
+            ) );
+
+            // Write tmp file to disk
+            fs.writeFileSync( gulpfile.path, file.contents );
+        }
+
+        // Find local gulp cli script
+        var localGulpPackage        = null;
+        var localGulpPackageBase    = null;
+        var localGulpCliPath        = null;
+        try {
+            localGulpPackageBase    = path.dirname( resolve.sync( &#x27;gulp&#x27;, { basedir: gulpfile.base } ) );
+            localGulpPackage        = require( path.join( localGulpPackageBase, &#x27;package.json&#x27; ) );
+            localGulpCliPath        = path.resolve( path.join( localGulpPackageBase, localGulpPackage.bin.gulp ) );
+        } catch( err ) {
+            sayErr( util.format(
+                &#x27;Problem finding locally-installed `gulp` for gulpfile %s. &#x27; +
+                &#x27;(Try running `npm install gu ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.gulp-chug.toString" id="apidoc.element.gulp-chug.toString">
+        function <span class="apidocSignatureSpan">gulp-chug.</span>toString
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">toString = function () {
+    return text;
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+// Execute local gulpfile cli script
+var spawnedGulp = spawn( cmd, args, { cwd: gulpfile.base } );
+
+// Log output coming from gulpfile stdout and stderr
+var logGulpfileOutput = function ( data ) {
+    say( util.format( &#x27;(%s) %s&#x27;,
+        gutil.colors.magenta( gulpfile.relPath ),
+        data.<span class="apidocCodeKeywordSpan">toString</span>()
+    ), true );
+};
+
+// Remove temp file if one exists
+var cleanupTmpFile = function () {
+    try {
+        if( gulpfile.tmpPath ) {
+...</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.gulp-chug.toString" id="apidoc.module.gulp-chug.toString">module gulp-chug.toString</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.gulp-chug.toString.toString" id="apidoc.element.gulp-chug.toString.toString">
+        function <span class="apidocSignatureSpan">gulp-chug.</span>toString
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function toString() { [native code] }</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+// Execute local gulpfile cli script
+var spawnedGulp = spawn( cmd, args, { cwd: gulpfile.base } );
+
+// Log output coming from gulpfile stdout and stderr
+var logGulpfileOutput = function ( data ) {
+    say( util.format( &#x27;(%s) %s&#x27;,
+        gutil.colors.magenta( gulpfile.relPath ),
+        data.<span class="apidocCodeKeywordSpan">toString</span>()
+    ), true );
+};
+
+// Remove temp file if one exists
+var cleanupTmpFile = function () {
+    try {
+        if( gulpfile.tmpPath ) {
+...</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
