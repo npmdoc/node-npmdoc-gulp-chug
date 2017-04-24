@@ -1,4 +1,7 @@
-# api documentation for  [gulp-chug (v0.5.1)](https://github.com/robatron/gulp-chug#readme)  [![npm package](https://img.shields.io/npm/v/npmdoc-gulp-chug.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-gulp-chug) [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-gulp-chug.svg)](https://travis-ci.org/npmdoc/node-npmdoc-gulp-chug)
+# npmdoc-gulp-chug
+
+#### api documentation for  [gulp-chug (v0.5.1)](https://github.com/robatron/gulp-chug#readme)  [![npm package](https://img.shields.io/npm/v/npmdoc-gulp-chug.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-gulp-chug) [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-gulp-chug.svg)](https://travis-ci.org/npmdoc/node-npmdoc-gulp-chug)
+
 #### Run external gulpfiles as part of a gulp task inside another gulpfile
 
 [![NPM](https://nodei.co/npm/gulp-chug.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/gulp-chug)
@@ -93,7 +96,8 @@
         "publish-patch": "npm version patch && git push origin master --tags && npm publish",
         "test": "gulp --gulpfile test/gulp-chug-integrate.js && gulp test"
     },
-    "version": "0.5.1"
+    "version": "0.5.1",
+    "bin": {}
 }
 ```
 
